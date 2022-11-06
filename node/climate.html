@@ -19,6 +19,7 @@
             minTemp: {value: 5, required:true},
             maxTemp: {value: 25, required:true},
             tempValid: {value: 60, required:true},
+            offOnExpire: {value: false, required:true},
             swapDelay: {value: 60, required:true},
 
             // Outputs
@@ -194,6 +195,12 @@
             </label>
             <input type="number" id="node-input-tempValid" min="1" max="120" style="width: 60px">
             <label>minute(s)</label>
+        </div>
+        <div class="form-row">
+            <label title="Turns off outputs after temperature expiration (see above setting,) resumes after temperature is refreshed. Checked at keep alive interval or on other input." for="node-input-offOnExpire">
+                <i class="fa fa-info-circle"></i> Failsafe
+            </label>
+            <input type="checkbox" id="node-input-offOnExpire" style="width: 20px; margin: 0">
         </div>
         <div class="form-row">
             <label title="Minimum time to wait before switching from heating to cooling or vice versa.  Without this heating & cooling may compete against each other" for="node-input-swapDelay">
