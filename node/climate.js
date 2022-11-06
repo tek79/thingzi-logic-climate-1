@@ -19,6 +19,8 @@ module.exports = function(RED) {
         this.outputs = config.outputs;
         this.updateTimeout = null;
         this.starting = true;
+        // Add failsafe to disable outputs on expiration
+        this.offOnExpire = config.offOnExpire;
 
         // Configuration
         this.keepAliveMs = parseFloat(config.keepAlive) * 1000 * 60; //< mins to ms
@@ -296,6 +298,19 @@ module.exports = function(RED) {
             if (node.hasSetpoint) {
                 // Make sure we have a temp value
                 if (!s.tempTime || now.diff(s.tempTime) >= node.tempValidMs) {
+                    // Add failsafe to disable outputs on expiration
+                    if (node.offOnExpire) {
+                        s.action = offValue;
+                        s.changed = true;
+                        node.lastChange = node.lastAction == null ? null : now;
+                        node.lastAction = s.action;
+                        node.setValue('action', s.action);
+                        node.updateStatus(s);
+                        node.send([ 
+                            { payload: 'OFF' }, 
+                            { payload: 'OFF' } 
+                        ]);
+                    }
                     node.setStatus({fill:'grey', shape:'dot', text:'waiting for temp...'});
                     return;
                 }
