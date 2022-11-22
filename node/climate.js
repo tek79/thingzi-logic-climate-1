@@ -346,6 +346,10 @@ module.exports = function(RED) {
             let heating = s.action === 'heating';
             let cooling = s.action === 'cooling';
 
+	    // Update last heat/cool time
+            if (heating || node.lastAction === 'heating') node.lastHeatTime = now;
+            if (cooling || node.lastAction === 'cooling') node.lastCoolTime = now;
+		
             // Dont allow changes faster than the cycle time to protect climate systems
             if (s.changed) {
                 if (node.lastChange) {
@@ -362,10 +366,6 @@ module.exports = function(RED) {
                 node.lastChange = now;
                 node.lastAction = s.action;
                 node.setValue('action', s.action);
-
-                // Update last heat/cool time
-                if (heating || s.lastAction === 'heating') node.lastHeatTime = now;
-                if (cooling || s.lastAction === 'cooling') node.lastCoolTime = now;
             }
 
             // Send a message
