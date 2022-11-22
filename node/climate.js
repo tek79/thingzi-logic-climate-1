@@ -237,10 +237,29 @@ module.exports = function(RED) {
             // Get Current Capability
             let canHeat = node.hasHeating && (s.mode === 'auto' || s.mode === 'heat');
             let canCool = node.hasCooling && (s.mode === 'auto' || s.mode === 'cool');
-            
+
             // Use direction of temperature change to improve calculation and reduce ping pong effect
-            let isTempRising = node.lastTemp ? s.temp - node.lastTemp > 0.01 : false;
-            let isTempFalling = node.lastTemp ? s.temp - node.lastTemp < -0.01 : false;
+            var isTempRising = node.lastTemp ? s.temp - node.lastTemp > 0.01 : false;
+            var isTempFalling = node.lastTemp ? s.temp - node.lastTemp < -0.01 : false;
+            
+			// Store direction on temperature change only
+            if (s.temp != node.lastTemp) {
+                if (isTempFalling == true) {
+                    node.lastDirection = 'falling';
+                } else if (isTempRising == true) {
+                    node.lastDirection = 'rising';
+                }
+            }
+
+            // If temperature is neither falling or rising, use last direction to calculate setpoint
+            if (s.temp == node.lastTemp) {
+                if (node.lastDirection == 'falling') {
+                    isTempFalling = true;
+                } else if (node.lastDirection == 'rising') {
+                    isTempRising = true;
+                }
+            }
+
             let heatPoint = isTempFalling ? s.setpoint - node.tolerance + 0.1 : s.setpoint;
             let coolPoint = isTempRising ? s.setpoint + node.tolerance - 0.1 : s.setpoint;
 
