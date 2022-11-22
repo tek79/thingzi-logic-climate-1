@@ -14,6 +14,7 @@ module.exports = function(RED) {
 
         // Internal State
         this.name = config.name || this.id;
+        this.sendTopic = config.name ? `${config.name.toLowerCase().trim().replace(/\s+/g, '-')}` : `${this.id}`;
         this.deviceId = config.name ? `${config.name.toLowerCase().trim().replace(/\s+/g, '-')}-climate` : `${this.id}-climate`;
         this.sendStatus = config.sendStatus;
         this.outputs = config.outputs;
@@ -198,7 +199,7 @@ module.exports = function(RED) {
         this.setStatus = function(msg) {
             node.status(msg);
             if (node.sendStatus) {
-                node.send([ null, null, { payload: msg }]);
+                node.send([ null, null, { topic: this.sendTopic, payload: msg }]);
             }
         }
 
@@ -222,7 +223,7 @@ module.exports = function(RED) {
             
             node.status(msg);
             if (node.sendStatus) {
-                node.send([ null, null, { payload: msg, status: s }]);
+                node.send([ null, null, { topic: this.sendTopic, payload: msg, status: s }]);
             }
         }
 
@@ -236,12 +237,25 @@ module.exports = function(RED) {
             // Get Current Capability
             let canHeat = node.hasHeating && (s.mode === 'auto' || s.mode === 'heat');
             let canCool = node.hasCooling && (s.mode === 'auto' || s.mode === 'cool');
-            
+
             // Use direction of temperature change to improve calculation and reduce ping pong effect
-            let isTempRising = node.lastTemp ? s.temp - node.lastTemp > 0.01 : false;
-            let isTempFalling = node.lastTemp ? s.temp - node.lastTemp < -0.01 : false;
-            let heatPoint = isTempFalling ? s.setpoint + node.tolerance : s.setpoint - node.tolerance;
-            let coolPoint = isTempRising ? s.setpoint - node.tolerance : s.setpoint + node.tolerance;
+            var isTempRising = node.lastTemp ? s.temp - node.lastTemp > 0.01 : false;
+            var isTempFalling = node.lastTemp ? s.temp - node.lastTemp < -0.01 : false;
+            
+			// Store direction on temperature change only
+            if (s.temp != node.lastTemp) {
+                if (isTempFalling) node.lastDirection = 'falling';
+                if (isTempRising) node.lastDirection = 'rising';
+            }
+
+            // If temperature is neither falling or rising, use last direction to calculate setpoint
+            if (s.temp == node.lastTemp) {
+                isTempFalling = node.lastDirection == 'falling' ? true : false;
+                isTempRising = node.lastDirection == 'rising' ? true : false;
+            }
+
+            let heatPoint = isTempFalling ? s.setpoint - node.tolerance + 0.1 : s.setpoint;
+            let coolPoint = isTempRising ? s.setpoint + node.tolerance - 0.1 : s.setpoint;
 
             // Store last temp
             node.lastTemp = s.temp;
@@ -332,6 +346,10 @@ module.exports = function(RED) {
             let heating = s.action === 'heating';
             let cooling = s.action === 'cooling';
 
+	    // Update last heat/cool time
+            if (heating || node.lastAction === 'heating') node.lastHeatTime = now;
+            if (cooling || node.lastAction === 'cooling') node.lastCoolTime = now;
+		
             // Dont allow changes faster than the cycle time to protect climate systems
             if (s.changed) {
                 if (node.lastChange) {
@@ -348,18 +366,14 @@ module.exports = function(RED) {
                 node.lastChange = now;
                 node.lastAction = s.action;
                 node.setValue('action', s.action);
-
-                // Update last heat/cool time
-                if (heating || s.lastAction === 'heating') node.lastHeatTime = now;
-                if (cooling || s.lastAction === 'cooling') node.lastCoolTime = now;
             }
 
             // Send a message
             if (s.changed || s.keepAlive) {
                 node.lastSend = now;
                 node.send([ 
-                    { payload: node.getOutput(heating) }, 
-                    { payload: node.getOutput(cooling) } 
+                    { topic: this.sendTopic, payload: node.getOutput(heating) }, 
+                    { topic: this.sendTopic, payload: node.getOutput(cooling) } 
                 ]);
             }
 
