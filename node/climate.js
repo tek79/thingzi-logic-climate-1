@@ -14,6 +14,7 @@ module.exports = function(RED) {
 
         // Internal State
         this.name = config.name || this.id;
+        this.sendTopic = config.name ? `${config.name.toLowerCase().trim().replace(/\s+/g, '-')}` : `${this.id}`;
         this.deviceId = config.name ? `${config.name.toLowerCase().trim().replace(/\s+/g, '-')}-climate` : `${this.id}-climate`;
         this.sendStatus = config.sendStatus;
         this.outputs = config.outputs;
@@ -198,7 +199,7 @@ module.exports = function(RED) {
         this.setStatus = function(msg) {
             node.status(msg);
             if (node.sendStatus) {
-                node.send([ null, null, { payload: msg }]);
+                node.send([ null, null, { topic: this.sendTopic, payload: msg }]);
             }
         }
 
@@ -222,7 +223,7 @@ module.exports = function(RED) {
             
             node.status(msg);
             if (node.sendStatus) {
-                node.send([ null, null, { payload: msg, status: s }]);
+                node.send([ null, null, { topic: this.sendTopic, payload: msg, status: s }]);
             }
         }
 
@@ -240,8 +241,8 @@ module.exports = function(RED) {
             // Use direction of temperature change to improve calculation and reduce ping pong effect
             let isTempRising = node.lastTemp ? s.temp - node.lastTemp > 0.01 : false;
             let isTempFalling = node.lastTemp ? s.temp - node.lastTemp < -0.01 : false;
-            let heatPoint = isTempFalling ? s.setpoint + node.tolerance : s.setpoint - node.tolerance;
-            let coolPoint = isTempRising ? s.setpoint - node.tolerance : s.setpoint + node.tolerance;
+            let heatPoint = isTempFalling ? s.setpoint - node.tolerance + 0.1 : s.setpoint;
+            let coolPoint = isTempRising ? s.setpoint + node.tolerance - 0.1 : s.setpoint;
 
             // Store last temp
             node.lastTemp = s.temp;
@@ -358,8 +359,8 @@ module.exports = function(RED) {
             if (s.changed || s.keepAlive) {
                 node.lastSend = now;
                 node.send([ 
-                    { payload: node.getOutput(heating) }, 
-                    { payload: node.getOutput(cooling) } 
+                    { topic: this.sendTopic, payload: node.getOutput(heating) }, 
+                    { topic: this.sendTopic, payload: node.getOutput(cooling) } 
                 ]);
             }
 
