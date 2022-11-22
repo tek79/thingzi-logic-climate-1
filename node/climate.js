@@ -244,20 +244,14 @@ module.exports = function(RED) {
             
 			// Store direction on temperature change only
             if (s.temp != node.lastTemp) {
-                if (isTempFalling == true) {
-                    node.lastDirection = 'falling';
-                } else if (isTempRising == true) {
-                    node.lastDirection = 'rising';
-                }
+                if (isTempFalling) node.lastDirection = 'falling';
+                if (isTempRising) node.lastDirection = 'rising';
             }
 
             // If temperature is neither falling or rising, use last direction to calculate setpoint
             if (s.temp == node.lastTemp) {
-                if (node.lastDirection == 'falling') {
-                    isTempFalling = true;
-                } else if (node.lastDirection == 'rising') {
-                    isTempRising = true;
-                }
+                isTempFalling = node.lastDirection == 'falling' ? true : false;
+                isTempRising = node.lastDirection == 'rising' ? true : false;
             }
 
             let heatPoint = isTempFalling ? s.setpoint - node.tolerance + 0.1 : s.setpoint;
