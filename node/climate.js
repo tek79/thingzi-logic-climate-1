@@ -242,8 +242,11 @@ module.exports = function(RED) {
             var isTempRising = node.lastTemp ? s.temp - node.lastTemp > 0.01 : false;
             var isTempFalling = node.lastTemp ? s.temp - node.lastTemp < -0.01 : false;
             
-			// Store direction on temperature change only
+            // Store direction on temperature change only
             if (s.temp != node.lastTemp) {
+                node.lastDirection = null;
+                if (node.lastAction === 'heating') isTempFalling = false;
+                if (node.lastAction === 'cooling') isTempRising = false;
                 if (isTempFalling) node.lastDirection = 'falling';
                 if (isTempRising) node.lastDirection = 'rising';
             }
