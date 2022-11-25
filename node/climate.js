@@ -223,7 +223,7 @@ module.exports = function(RED) {
                 msg.text = `${pre}mode=${mode}`;
             }
             
-	    s.differentialTemp = s.tempValid == true && s.mode != offValue ? parseFloat(node.setpoint.get() - node.temp.get()).toFixed(1) : 0;
+	    s.differentialTemp = s.tempValid == true && s.mode != offValue ? parseFloat((node.setpoint.get() - node.temp.get()).toFixed(1)) : 0;
 		
             node.status(msg);
             if (node.sendStatus) {
