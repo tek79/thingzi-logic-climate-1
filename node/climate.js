@@ -25,7 +25,7 @@ module.exports = function(RED) {
         this.keepAliveMs = parseFloat(config.keepAlive) * 1000 * 60; //< mins to ms
         this.cycleDelayMs = parseFloat(config.cycleDelay) * 1000; //< seconds to ms
         this.boostDurationMins = config.boostDuration;
-        this.weight = parseFloat(config.zoneWeight);
+        this.zoneWeight = parseFloat(config.zoneWeight);
         this.triggerZone = config.triggerZone;
 
         // Set Point
@@ -224,6 +224,8 @@ module.exports = function(RED) {
             }
             
 	    s.differentialTemp = s.tempValid == true && s.mode != offValue ? parseFloat((node.temp.get() - node.setpoint.get()).toFixed(1)) : 0;
+	    s.weight = this.zoneWeight;
+	    s.trigger = this.triggerZone;;
 		
             node.status(msg);
             if (node.sendStatus) {
