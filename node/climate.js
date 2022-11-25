@@ -224,7 +224,7 @@ module.exports = function(RED) {
             }
             
 	    s.differentialTemp = s.tempValid == true && s.mode != offValue ? parseFloat((node.temp.get() - node.setpoint.get()).toFixed(1)) : 0;
-	    s.weight = this.zoneWeight;
+	    s.weight =  s.tempValid == true && s.mode != offValue ? this.zoneWeight : 0;
 	    s.trigger = this.triggerZone;;
 		
             node.status(msg);
@@ -325,8 +325,8 @@ module.exports = function(RED) {
                 changed: false,
                 pending: false,
                 keepAlive: false,
-		weight: this.weight,
-		trigger: this.triggerZone
+		weight: 0,
+		trigger: false
             };
 
             // Use default mode for boosting
