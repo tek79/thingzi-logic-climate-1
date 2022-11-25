@@ -223,6 +223,8 @@ module.exports = function(RED) {
                 msg.text = `${pre}mode=${mode}`;
             }
             
+	    s.differentialTemp = s.tempValid == true && s.mode != offValue ? parseFloat(node.setpoint.get() - node.temp.get()).toFixed(1) : 0;
+		
             node.status(msg);
             if (node.sendStatus) {
                 node.send([ null, null, { topic: this.sendTopic, payload: msg, status: s }]);
@@ -314,7 +316,7 @@ module.exports = function(RED) {
                 temp: node.temp.get(),
                 tempTime: node.temp.time(),
                 tempValid: false,
-		differentialTemp: parseFloat((node.setpoint.get() - node.temp.get()).toFixed(1)) || 0,
+		differentialTemp: 0,
                 action: offValue,
                 heatOutput: false,
 		coolOutput: false,
