@@ -25,6 +25,8 @@ module.exports = function(RED) {
         this.keepAliveMs = parseFloat(config.keepAlive) * 1000 * 60; //< mins to ms
         this.cycleDelayMs = parseFloat(config.cycleDelay) * 1000; //< seconds to ms
         this.boostDurationMins = config.boostDuration;
+        this.weight = parseFloat(config.zoneWeight);
+        this.triggerZone = config.triggerZone;
 
         // Set Point
         this.degrees = config.degrees;
@@ -231,7 +233,12 @@ module.exports = function(RED) {
 
             // Waiting for input
             if (!s.tempTime || now.diff(s.tempTime) >= node.tempValidMs) {
+                s.tempValid = false;
                 return 'idle';
+            }
+
+	    if (s.tempTime && now.diff(s.tempTime) < node.tempValidMs) {
+                s.tempValid = true;
             }
 
             // Get Current Capability
@@ -306,10 +313,16 @@ module.exports = function(RED) {
                 setpoint: node.setpoint.get(),
                 temp: node.temp.get(),
                 tempTime: node.temp.time(),
+                tempValid: false,
+		differentialTemp: parseFloat((node.setpoint.get() - node.temp.get()).toFixed(1)) || 0,
                 action: offValue,
+                heatOutput: false,
+		coolOutput: false,
                 changed: false,
                 pending: false,
-                keepAlive: false
+                keepAlive: false,
+		weight: this.weight,
+		trigger: this.triggerZone
             };
 
             // Use default mode for boosting
@@ -352,7 +365,9 @@ module.exports = function(RED) {
 	    // Update last heat/cool time
             if (heating || node.lastAction === 'heating') node.lastHeatTime = now;
             if (cooling || node.lastAction === 'cooling') node.lastCoolTime = now;
-		
+            s.heatOutput = (heating || node.lastAction === 'heating') == true ? true : false;
+            s.coolOutput = (cooling || node.lastAction === 'cooling') == true ? true : false;
+
             // Dont allow changes faster than the cycle time to protect climate systems
             if (s.changed) {
                 if (node.lastChange) {
