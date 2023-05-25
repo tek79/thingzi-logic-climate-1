@@ -59,12 +59,14 @@
             $('#node-input-degrees').on('change', function(data) {
                 if (!degreesFirstTime) {
                     if ($('#node-input-degrees').val() === 'C') {
-                        $('#node-input-defaultSetPoint').val(20);
+                        $('#node-input-defaultHeatSetPoint').val(20);
+                        $('#node-input-defaultCoolSetPoint').val(26);
                         $('#node-input-tolerance').val(0.2);
                         $('#node-input-minTemp').val(5);
                         $('#node-input-maxTemp').val(25);
                     } else {
-                        $('#node-input-defaultSetPoint').val(70);
+                        $('#node-input-defaultHeatSetPoint').val(68);
+                        $('#node-input-defaultCoolSetPoint').val(78);
                         $('#node-input-tolerance').val(0.3);
                         $('#node-input-minTemp').val(55);
                         $('#node-input-maxTemp').val(88);
@@ -176,10 +178,17 @@
             </select>
         </div>
         <div class="form-row">
-            <label title="Default set point of the climate controller.  Can be overridden by 'setpoint' input" for="node-input-defaultSetPoint">
+            <label title="Default heat set point of the climate controller.  Can be overridden by 'setpoint' input" for="node-input-defaultHeatSetPoint">
                 <i class="fa fa-dashboard"></i> Default
             </label>
-            <input type="number" id="node-input-defaultSetPoint" min="0" max="90" step="0.5" style="width: 60px">
+            <input type="number" id="node-input-defaultHeatSetPoint" min="0" max="90" step="0.5" style="width: 60px">
+            <label>degrees</label>
+        </div>
+        <div class="form-row">
+            <label title="Default cool set point of the climate controller.  Can be overridden by 'setpoint' input" for="node-input-defaultCoolSetPoint">
+                <i class="fa fa-dashboard"></i> Default
+            </label>
+            <input type="number" id="node-input-defaultCoolSetPoint" min="0" max="90" step="0.5" style="width: 60px">
             <label>degrees</label>
         </div>
         <div class="form-row">
